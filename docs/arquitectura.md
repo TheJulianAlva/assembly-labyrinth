@@ -1,6 +1,6 @@
-# Documento de Arquitectura y Flujo de Trabajo: "Labyrinth-x86"
+# Documento de Arquitectura: "assembly-Labyrinth"
 
-Este documento define la estructura del repositorio y la arquitectura técnica general de un proyecto modular en Assembly x86_64.
+Este documento define la estructura del repositorio y la arquitectura técnica general de un proyecto modular en Assembly x86_32.
 
 ---
 
@@ -9,7 +9,7 @@ Este documento define la estructura del repositorio y la arquitectura técnica g
 Esta es la estructura recomendada para el repositorio:
 
 ```text
-Labyrinth-x86/
+assembly-Labyrinth/
 ├── src/
 │   ├── main.asm         # Punto de entrada (_start). Lógica del Game Loop.
 │   ├── render.asm       # Subrutinas de dibujo (clear_screen, draw_map, draw_player).
@@ -27,7 +27,7 @@ Labyrinth-x86/
 
 ---
 
-## 2. División del Trabajo (Equipo de 4 Integrantes)
+## 2. División del Trabajo
 
 Para evitar bloquearse mutuamente, el equipo debe dividir el desarrollo 
 basado en los módulos definidos arriba.
@@ -57,7 +57,7 @@ basado en los módulos definidos arriba.
     un mapa en memoria al inicio de la partida para encontrar el carácter de 
     inicio (`P`), guardar su `X` e `Y`, y borrarlo del mapa.
   * Programar el núcleo del juego: la matemática `(Y * Ancho) + X`.
-  * Crear la subrutina que reciba las coordenadas tentativas y retorne (ej. en `RAX`) 
+  * Crear la subrutina que reciba las coordenadas tentativas y retorne (ej. en `EAX`) 
     si el movimiento es válido (`1`), bloqueado (`0`), o si es victoria (`2`).
 
 ### Integrante 4: "El Ingeniero de Sistemas" (Módulos: `input.asm`, `utils.asm`)
@@ -74,8 +74,8 @@ basado en los módulos definidos arriba.
 ## 3. Flujo de Comunicación (Archivos `.inc` y registros)
 
 El mayor reto de programar en equipo en Assembly es saber qué registro está usando 
-tu compañero. Si el Integrante 3 usa `RAX` para una suma y el Integrante 2 llama a 
-`sys_write` (que destruye `RAX`), el programa fallará catastróficamente.
+tu compañero. Si el Integrante 3 usa `EAX` para una suma y el Integrante 2 llama a 
+`sys_write` (que destruye `EAX`), el programa fallará catastróficamente.
 
 **Reglas de Oro del Equipo:**
 1. **Preservación del Contexto:** Toda subrutina desarrollada debe empujar 
@@ -84,17 +84,17 @@ tu compañero. Si el Integrante 3 usa `RAX` para una suma y el Integrante 2 llam
    ```assembly
    ; Ejemplo de buena práctica
    mi_subrutina:
-       push rbx
-       push rcx
-       ; ... código que usa rbx y rcx ...
-       pop rcx
-       pop rbx
+       push ebx
+       push ecx
+       ; ... código que usa ebx y ecx ...
+       pop ecx
+       pop ebx
        ret
    ```
 2. **Convención C (cdecl):** Acordar qué registros se usarán para pasar parámetros 
-   a las subrutinas. Se recomienda usar el estándar de Linux:
-   `RDI` (Param 1), `RSI` (Param 2), `RDX` (Param 3).
-3. **Uso de `.inc`:** Las constantes globales (como `SYS_WRITE equ 1`) deben 
+   a las subrutinas. Se recomienda usar el estándar de Linux x86-32:
+   `EBX` (Param 1), `ECX` (Param 2), `EDX` (Param 3).
+3. **Uso de `.inc`:** Las constantes globales (como `SYS_WRITE equ 4`) deben 
    estar definidas en `constants.inc` e incluidas (`%include`) en los archivos 
    necesarios para evitar "números mágicos" regados por el código.
 
