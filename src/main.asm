@@ -16,13 +16,21 @@ player_x:           resd 1   ; columna actual del jugador
 player_y:           resd 1   ; fila actual del jugador
 current_map_index:  resd 1   ; índice del mapa activo (0, 1 o 2)
 
+section .data
+
+msg     db "Assembly Labyrinth - OK", 0x0A
+msg_len equ $ - msg
+
 section .text
 
 global _start
 _start:
-    ; inicializar terminal, seleccionar mapa, iniciar game loop
+    mov eax, SYS_WRITE
+    mov ebx, STDOUT
+    mov ecx, msg
+    mov edx, msg_len
+    int 0x80
 
-    ; Salida limpia
     mov eax, SYS_EXIT
     xor ebx, ebx
     int 0x80

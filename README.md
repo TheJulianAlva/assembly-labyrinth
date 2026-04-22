@@ -34,16 +34,29 @@ El jugador `O` debe alcanzar la salida `S` sin atravesar paredes `#`.
 
 ## Requisitos
 
-| Herramienta | Versión mínima | Propósito |
-|---|---|---|
-| [NASM](https://nasm.us/) | 2.14+ | Ensamblador |
-| `ld` (GNU Binutils) | cualquiera | Enlazador |
-| Linux kernel | 3.x+ | Syscalls IA-32 via `int 0x80` |
-| `make` | 3.8+ | Automatización de build |
+El proyecto compila y ejecuta dentro de un contenedor Docker, por lo que el único requisito en el host es:
+
+| Herramienta | Propósito |
+|---|---|
+| [Docker](https://www.docker.com/) | Entorno Linux con NASM y GNU Make |
+
+El contenedor `codeneomatrix/nasm` incluye NASM, GNU Binutils y Make preinstalados.
 
 ---
 
 ## Compilación y Ejecución
+
+### Desde Windows
+
+Ejecuta el script incluido en la raíz del proyecto:
+
+```bat
+docker-run.bat
+```
+
+Esto monta el proyecto en el contenedor, lo compila y lo ejecuta automáticamente.
+
+### Desde Linux / WSL / dentro del contenedor
 
 ```bash
 # Compilar
@@ -57,6 +70,14 @@ make clean
 ```
 
 El ejecutable queda en `build/assembly-labyrinth`.
+
+### Iniciar el contenedor manualmente
+
+Si prefieres entrar al contenedor para explorar o depurar:
+
+```bat
+docker run --rm -it -v "<RUTA_PROYECTO>\assembly-labyrinth:/code" -w /code codeneomatrix/nasm sh
+```
 
 ---
 

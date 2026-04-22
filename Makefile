@@ -1,4 +1,6 @@
 AS      := nasm
+DOCKER_IMAGE := codeneomatrix/nasm
+DOCKER_VOL   := C:\Users\julia\OneDrive\Documentos\assembly-labyrinth
 LD      := ld
 ASFLAGS := -f elf32 -g -F dwarf -I include/
 LDFLAGS := -m elf_i386 -e _start
@@ -25,6 +27,7 @@ $(BUILD):
 
 run: all
 	$(TARGET)
+
 
 clean:
 	rm -rf $(BUILD)
