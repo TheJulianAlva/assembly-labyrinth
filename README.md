@@ -167,7 +167,7 @@ Toda subrutina preserva los registros que modifica con `push`/`pop`, salvo el re
 
 | Rol | Módulos |
 |---|---|
-| El Arquitecto | `main.asm`, `Makefile`, `constants.inc` |
-| El Diseñador Gráfico | `render.asm`, `maps.asm` |
-| El Físico | `physics.asm` |
-| El Ingeniero de Sistemas | `input.asm`, `utils.asm` |
+| Arquitectura | `main.asm`, `Makefile`, `constants.inc` |
+| Diseño Gráfico | `render.asm`, `maps.asm` |
+| Físicas | `physics.asm` |
+| Sistema | `input.asm`, `utils.asm` |
