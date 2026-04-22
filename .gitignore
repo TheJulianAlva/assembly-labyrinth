@@ -1,0 +1,22 @@
+# Build artifacts
+build/
+*.o
+*.out
+
+# Executable
+assembly-labyrinth
+labyrinth
+
+# NASM listing files
+*.lst
+
+# Editor / IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
