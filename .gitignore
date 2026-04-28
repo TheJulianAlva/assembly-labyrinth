@@ -20,3 +20,6 @@ labyrinth
 # OS
 .DS_Store
 Thumbs.db
+
+# Docker scripts
+docker-run.bat
