@@ -53,12 +53,17 @@ basado en los módulos definidos arriba.
 ### Integrante 3: "El Físico" (Módulos: `physics.asm`)
 * **Rol:** Controla el estado y las matemáticas del juego.
 * **Tareas:**
-  * Implementar el algoritmo de "Escaneo Dinámico": una subrutina que recorra 
-    un mapa en memoria al inicio de la partida para encontrar el carácter de 
-    inicio (`P`), guardar su `X` e `Y`, y borrarlo del mapa.
-  * Programar el núcleo del juego: la matemática `(Y * Ancho) + X`.
-  * Crear la subrutina que reciba las coordenadas tentativas y retorne (ej. en `EAX`) 
-    si el movimiento es válido (`1`), bloqueado (`0`), o si es victoria (`2`).
+  * Implementar `physics.asm` como la capa que decide si un paso es posible.
+  * Programar la subrutina de inicialización `find_player_start` que recorra el mapa en memoria al inicio de la partida: buscar el carácter de inicio (`P`), guardar su posición en variables globales `player_x` y `player_y`, y reemplazar `P` por el carácter de piso (`.`) o espacio libre.
+  * Definir una función auxiliar `coord_to_offset` que calcule el índice en el buffer del mapa con la fórmula `Y * MAP_WIDTH + X` usando la constante `MAP_WIDTH` de `constants.inc`.
+  * Crear una subrutina `check_move` que reciba coordenadas tentativas en registros acordados (por ejemplo, `EBX = X`, `ECX = Y`) y lea el carácter del mapa en esa posición.
+    - Si el destino es pared (`#`), retornar `0` en `EAX`.
+    - Si el destino es piso (`.`) o espacio libre, retornar `1`.
+    - Si el destino es salida/puerta (`E`), retornar `2`.
+  * Implementar una rutina `apply_move` o `try_move` que combine la lógica de colisión con el avance de `player_x`/`player_y` cuando `check_move` devuelve válido.
+  * Manejar la conversión entre coordenadas de juego y offset lineal siempre dentro de `physics.asm`, manteniendo a los demás módulos ajenos al detalle de la memoria del mapa.
+  * Preservar registros en cada subrutina: usar `push`/`pop` para `EBX`, `ECX`, `EDX` si son modificados, y devolver resultados en `EAX`.
+  * Documentar en el código las convenciones de entrada/salida de las subrutinas para que `main.asm` y `render.asm` puedan integrarlas sin confusión.
 
 ### Integrante 4: "El Ingeniero de Sistemas" (Módulos: `input.asm`, `utils.asm`)
 * **Rol:** Se encarga de la interfaz de bajo nivel con el Sistema Operativo.
