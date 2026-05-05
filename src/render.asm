@@ -1,15 +1,35 @@
-section .data
-    ; Secuencias de escape ANSI
-    clear_seq   db 27, "[2J", 27, "[H"  ; \033[2J (limpiar) y \033[H (reset cursor)
-    clear_len   equ $ - clear_seq
+; ─────────────────────────────────────────────────────────────────────────────
+; src/render.asm
+; Renderizado del mapa y entidades con UTF-8 y colores ANSI.
+; ─────────────────────────────────────────────────────────────────────────────
 
-    newline     db 10                   ; Salto de línea (\n)
-    
-    entity_char db "O"                  ; Carácter del jugador
+%include "constants.inc"
+
+section .data
+    clear_seq       db 27, "[2J", 27, "[H"
+    clear_len       equ $ - clear_seq
+
+    newline         db 10
+
+    ; ── Tiles con color ANSI + carácter UTF-8 ────────────────────────────────
+
+    ; Pared (#): █ azul brillante
+    tile_wall       db 27, "[94m", 0xE2, 0x96, 0x88, 27, "[0m"
+    tile_wall_len   equ $ - tile_wall
+
+    ; Suelo (_): espacio (fondo de terminal)
+    tile_floor      db " "
+    tile_floor_len  equ $ - tile_floor
+
+    ; Meta (M): ★ amarillo brillante
+    tile_meta       db 27, "[93m", 0xE2, 0x98, 0x85, 27, "[0m"
+    tile_meta_len   equ $ - tile_meta
+
+    ; Jugador: ▲ cian brillante
+    tile_player     db 27, "[96m", 0xE2, 0x96, 0xB2, 27, "[0m"
+    tile_player_len equ $ - tile_player
 
 section .bss
-    ; Buffer temporal para construir la secuencia ANSI de posición
-    ; Tamaño suficiente para \033[YYY;XXXH
     ansibuf resb 16
 
 section .text
@@ -19,52 +39,82 @@ section .text
 
 ; -----------------------------------------------------------------------------
 ; clear_terminal
-; Propósito: Limpia la pantalla y coloca el cursor en (0,0).
 ; -----------------------------------------------------------------------------
 clear_terminal:
     pusha
-    
-    mov eax, 4          ; sys_write
-    mov ebx, 1          ; stdout
-    mov ecx, clear_seq  ; secuencia ANSI
+    mov eax, SYS_WRITE
+    mov ebx, STDOUT
+    mov ecx, clear_seq
     mov edx, clear_len
     int 0x80
-    
     popa
     ret
 
 ; -----------------------------------------------------------------------------
 ; print_map
-; Propósito: Imprime el mapa de 20x10.
-; Entradas: EAX = Puntero al mapa.
+; Propósito: Imprime el mapa tile por tile, traduciendo cada carácter a su
+;            representación visual UTF-8 con color.
+; Entradas:  EAX = puntero al mapa.
 ; -----------------------------------------------------------------------------
 print_map:
     pusha
-    mov esi, eax        ; ESI apunta a los datos del mapa
-    mov ecx, 10         ; 10 filas (MAP_HEIGHT)
+    mov esi, eax            ; ESI = puntero al mapa
+    mov edi, MAP_HEIGHT     ; EDI = contador de filas
 
 .row_loop:
-    push ecx            ; Guardamos el contador de filas
+    mov ebx, MAP_WIDTH      ; EBX = contador de columnas
 
-    ; Imprimir 20 caracteres (1 fila)
-    mov eax, 4
-    mov ebx, 1
-    mov ecx, esi        ; Puntero a la fila actual
-    mov edx, 20         ; 20 columnas (MAP_WIDTH)
-    int 0x80
+.col_loop:
+    movzx eax, byte [esi]   ; AL = tile actual
+    call print_tile         ; imprime el tile (preserva todos los registros)
+    inc esi
+    dec ebx
+    jnz .col_loop
 
-    ; Imprimir salto de línea
-    mov eax, 4
-    mov ebx, 1
+    mov eax, SYS_WRITE
+    mov ebx, STDOUT
     mov ecx, newline
     mov edx, 1
     int 0x80
-    
-    ; Avanzar el puntero del mapa a la siguiente fila
-    add esi, 20
 
-    pop ecx             ; Restaurar el contador
-    loop .row_loop      ; Repetir para las 10 filas
+    dec edi
+    jnz .row_loop
+
+    popa
+    ret
+
+; -----------------------------------------------------------------------------
+; print_tile  [rutina interna]
+; Propósito: Traduce AL a su secuencia UTF-8+color y la escribe en stdout.
+; Entradas:  AL = carácter del tile.
+; Preserva:  todos los registros (usa pusha/popa).
+; -----------------------------------------------------------------------------
+print_tile:
+    pusha
+
+    cmp al, TILE_WALL
+    je .wall
+    cmp al, TILE_EXIT
+    je .exit_tile
+
+    ; suelo o cualquier otro carácter → espacio
+    mov ecx, tile_floor
+    mov edx, tile_floor_len
+    jmp .do_print
+
+.wall:
+    mov ecx, tile_wall
+    mov edx, tile_wall_len
+    jmp .do_print
+
+.exit_tile:
+    mov ecx, tile_meta
+    mov edx, tile_meta_len
+
+.do_print:
+    mov eax, SYS_WRITE
+    mov ebx, STDOUT
+    int 0x80
 
     popa
     ret
@@ -72,89 +122,83 @@ print_map:
 ; -----------------------------------------------------------------------------
 ; render_entity
 ; Propósito: Posiciona el cursor en (X, Y) y dibuja el jugador.
-; Entradas: EAX = Coordenada X, EBX = Coordenada Y.
-; Nota: Las coordenadas de la terminal empiezan en 1, no en 0.
+; Entradas:  EAX = X (columna), EBX = Y (fila).
+; Nota: coordenadas 0-indexed; la terminal usa 1-indexed.
 ; -----------------------------------------------------------------------------
 render_entity:
     pusha
-    
-    mov ecx, eax        ; Guardar X en ECX
-    
-    ; Iniciar secuencia ANSI en ansibuf
+
+    mov ecx, eax            ; guardar X en ECX
+
+    ; Construir secuencia ANSI \033[Y;XH en ansibuf
     mov edi, ansibuf
-    mov byte [edi], 27  ; \033
+    mov byte [edi], 27
     inc edi
     mov byte [edi], '['
     inc edi
-    
-    ; Convertir coordenada Y a texto (EBX)
+
     mov eax, ebx
-    inc eax             ; Convertir 0-indexed a 1-indexed para la terminal
+    inc eax                 ; Y: 0-indexed → 1-indexed
     call int_to_ascii
-    
-    ; Agregar separador ';'
+
     mov byte [edi], ';'
     inc edi
-    
-    ; Convertir coordenada X a texto (estaba en ECX)
+
     mov eax, ecx
-    inc eax             ; Convertir 0-indexed a 1-indexed para la terminal
+    inc eax                 ; X: 0-indexed → 1-indexed
     call int_to_ascii
-    
-    ; Finalizar secuencia ANSI con 'H'
+
     mov byte [edi], 'H'
     inc edi
-    
-    ; Calcular longitud de la secuencia construida
+
     mov edx, edi
-    sub edx, ansibuf    ; EDX = longitud
-    
-    ; Imprimir secuencia ANSI
-    mov eax, 4
-    mov ebx, 1
+    sub edx, ansibuf        ; longitud de la secuencia
+
+    mov eax, SYS_WRITE
+    mov ebx, STDOUT
     mov ecx, ansibuf
     int 0x80
-    
-    ; Imprimir el carácter del jugador ('@')
-    mov eax, 4
-    mov ebx, 1
-    mov ecx, entity_char
-    mov edx, 1
+
+    ; Imprimir el carácter del jugador
+    mov eax, SYS_WRITE
+    mov ebx, STDOUT
+    mov ecx, tile_player
+    mov edx, tile_player_len
     int 0x80
-    
+
     popa
     ret
 
 ; -----------------------------------------------------------------------------
-; Rutina Interna: int_to_ascii
-; Propósito: Convierte un entero en EAX a string ASCII y lo guarda en [EDI].
-; Entradas: EAX = Número entero. EDI = Puntero al buffer.
-; Salidas: Modifica [EDI] y avanza el puntero EDI.
+; int_to_ascii  [rutina interna]
+; Propósito: Convierte EAX (entero) a dígitos ASCII escritos en [EDI].
+; Entradas:  EAX = número, EDI = puntero al buffer de destino.
+; Salidas:   EDI avanzado al siguiente byte libre.
 ; -----------------------------------------------------------------------------
 int_to_ascii:
     push ebx
     push ecx
     push edx
-    
-    mov ecx, 10         ; Base 10
-    xor ebx, ebx        ; Contador de dígitos (EBX = 0)
-    
+
+    mov ecx, 10
+    xor ebx, ebx            ; contador de dígitos
+
 .div_loop:
-    xor edx, edx        ; Limpiar EDX antes de dividir
-    div ecx             ; EAX = EDX:EAX / 10, EDX = resto (dígito)
-    push edx            ; Guardar el dígito en la pila
-    inc ebx             ; Incrementar contador
-    test eax, eax       ; ¿Quedan más dígitos?
+    xor edx, edx
+    div ecx                 ; EAX = cociente, EDX = dígito
+    push edx
+    inc ebx
+    test eax, eax
     jnz .div_loop
-    
+
 .pop_loop:
-    pop eax             ; Sacar el dígito más significativo
-    add al, '0'         ; Convertir a ASCII ('0' = 48)
-    mov [edi], al       ; Guardar en el buffer
-    inc edi             ; Avanzar el puntero
-    dec ebx             ; Decrementar contador
-    jnz .pop_loop       ; Continuar hasta vaciar la pila
-    
+    pop eax
+    add al, '0'
+    mov [edi], al
+    inc edi
+    dec ebx
+    jnz .pop_loop
+
     pop edx
     pop ecx
     pop ebx
