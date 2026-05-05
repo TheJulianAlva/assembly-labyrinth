@@ -11,6 +11,7 @@ TARGET  := $(BUILD)/assembly-labyrinth
 
 SRCS := $(wildcard $(SRC)/*.asm)
 OBJS := $(patsubst $(SRC)/%.asm, $(BUILD)/%.o, $(SRCS))
+INCS := $(wildcard include/*.inc)
 
 .PHONY: all clean run
 
@@ -19,7 +20,7 @@ all: $(TARGET)
 $(TARGET): $(OBJS)
 	$(LD) $(LDFLAGS) -o $@ $^
 
-$(BUILD)/%.o: $(SRC)/%.asm | $(BUILD)
+$(BUILD)/%.o: $(SRC)/%.asm $(INCS) | $(BUILD)
 	$(AS) $(ASFLAGS) -o $@ $<
 
 $(BUILD):

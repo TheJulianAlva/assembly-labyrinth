@@ -18,8 +18,8 @@ MAP_COUNT         equ 3
 
 ; ── Tile characters (ASCII) ───────────────────────────────────────────────────
 TILE_WALL         equ '#'
-TILE_FLOOR        equ '.'
-TILE_EXIT         equ 'S'
+TILE_FLOOR        equ '_'
+TILE_EXIT         equ 'M'
 TILE_PLAYER_START equ 'P'
 TILE_PLAYER       equ 'O'
 
