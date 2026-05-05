@@ -88,7 +88,7 @@ read_key:
     add al, 32              ; Sumar 32 convierte 'A' en 'a'
 
 .check_valid:
-    ; Validar si es WASD
+    ; Validar si es WASD, Q o ESC
     cmp al, 'w'
     je .done
     cmp al, 'a'
@@ -97,9 +97,13 @@ read_key:
     je .done
     cmp al, 'd'
     je .done
+    cmp al, 'q'
+    je .done
+    cmp al, 0x1B ; ESC
+    je .done
 
-    ; Si presionan cualquier otra cosa, vuelve a esperar 
-    jmp .wait_input 
+    ; Si presionan cualquier otra cosa, vuelve a esperar
+    jmp .wait_input
 
 .done:
     ret

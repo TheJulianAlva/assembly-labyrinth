@@ -5,7 +5,7 @@ section .data
 
     newline     db 10                   ; Salto de línea (\n)
     
-    entity_char db "@"                  ; Carácter del jugador
+    entity_char db "O"                  ; Carácter del jugador
 
 section .bss
     ; Buffer temporal para construir la secuencia ANSI de posición

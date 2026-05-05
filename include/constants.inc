@@ -11,14 +11,14 @@ STDOUT            equ 1
 STDERR            equ 2
 
 ; ── Map dimensions ────────────────────────────────────────────────────────────
-MAP_WIDTH         equ 40
-MAP_HEIGHT        equ 20
-MAP_SIZE          equ MAP_WIDTH * MAP_HEIGHT   ; 800 bytes
+MAP_WIDTH         equ 20
+MAP_HEIGHT        equ 10
+MAP_SIZE          equ MAP_WIDTH * MAP_HEIGHT   ; 200 bytes
 MAP_COUNT         equ 3
 
 ; ── Tile characters (ASCII) ───────────────────────────────────────────────────
 TILE_WALL         equ '#'
-TILE_FLOOR        equ ' '
+TILE_FLOOR        equ '.'
 TILE_EXIT         equ 'S'
 TILE_PLAYER_START equ 'P'
 TILE_PLAYER       equ 'O'

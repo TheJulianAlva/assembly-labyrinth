@@ -1,37 +1,31 @@
 section .data
-    ; Definición de las dimensiones del mapa
-    global MAP_WIDTH
-    global MAP_HEIGHT
-    MAP_WIDTH  equ 20
-    MAP_HEIGHT equ 10
-
-    ; Mapa 1
+    ; Mapa 1 — P en (5,5), S en (18,1)
 map1:
     db "####################"
     db "#.................S#"
     db "#.################.#"
     db "#.#..............#.#"
     db "#.#.############.#.#"
-    db "#.#.#..........#.#.#"
+    db "#.#.#P.........#.#.#"
     db "#.#.#.########.#.#.#"
     db "#.#.#........#.#.#.#"
-    db "#.#.##########.#.#.#"
+    db "#...##########...#.#"
     db "####################"
 
-    ; Mapa 2
+    ; Mapa 2 — P en (14,7), S en (1,1)
 map2:
     db "####################"
     db "#S...............#.#"
     db "################.#.#"
     db "#..............#.#.#"
     db "#.############.#.#.#"
-    db "#..........#...#.#.#"
+    db "#P.........#...#.#.#"
     db "##########.#.###.#.#"
     db "#........#.#.#...#.#"
-    db "#.########.#.#.###.#"
+    db "#.########.....###.#"
     db "####################"
 
-    ; Mapa 3
+    ; Mapa 3 — P en (13,7), S en (15,5)
 map3:
     db "####################"
     db "#.......#..........#"
@@ -41,7 +35,7 @@ map3:
     db "#.#.#.#...#.#..S.#.#"
     db "#.#.#.#####.#.####.#"
     db "#.#.#.......#......#"
-    db "#.#.#########.####.#"
+    db "#P..#########.####.#"
     db "####################"
 
     ; Arreglo de punteros a los mapas
@@ -82,7 +76,7 @@ get_map_ptr:
 set_map_idx:
     ; Verificar que el índice sea válido (0 <= EAX <= 2)
     cmp eax, 2
-    ja .end            ; Si EAX > 2, ignorar la petición
+    ja .end ; Si EAX > 2, ignorar la petición
     mov [current_map_idx], eax
 .end:
     ret
