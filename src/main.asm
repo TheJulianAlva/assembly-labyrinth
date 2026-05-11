@@ -8,6 +8,7 @@
 ; ── Símbolos de otros módulos ─────────────────────────────────────────────────
 extern get_random_map
 extern set_map_idx
+extern load_map
 extern get_map_ptr
 
 extern scan_player_start
@@ -42,6 +43,7 @@ _start:
     ; Seleccionar mapa aleatorio y activarlo
     call get_random_map        ; EAX = 0 / 1 / 2
     call set_map_idx
+    call load_map              ; leer mapa desde archivo externo → loaded_map
 
     ; Buscar 'P' en el mapa → inicializa player_x, player_y
     call scan_player_start

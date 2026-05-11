@@ -1,9 +1,14 @@
 ; ── Syscalls (Linux x86_32) ───────────────────────────────────────────────────
+SYS_EXIT          equ 1
 SYS_READ          equ 3
 SYS_WRITE         equ 4
+SYS_OPEN          equ 5
+SYS_CLOSE         equ 6
 SYS_IOCTL         equ 54
 SYS_GETTIMEOFDAY  equ 78
-SYS_EXIT          equ 1
+
+; ── File flags ────────────────────────────────────────────────────────────────
+O_RDONLY          equ 0
 
 ; ── File descriptors ─────────────────────────────────────────────────────────
 STDIN             equ 0
@@ -13,7 +18,8 @@ STDERR            equ 2
 ; ── Map dimensions ────────────────────────────────────────────────────────────
 MAP_WIDTH         equ 20
 MAP_HEIGHT        equ 10
-MAP_SIZE          equ MAP_WIDTH * MAP_HEIGHT   ; 200 bytes
+MAP_SIZE          equ MAP_WIDTH * MAP_HEIGHT             ; 200 bytes
+MAP_FILE_BUFSIZE  equ MAP_HEIGHT * (MAP_WIDTH + 1)       ; 210 bytes (con \n)
 MAP_COUNT         equ 3
 
 ; ── Tile characters (ASCII) ───────────────────────────────────────────────────
